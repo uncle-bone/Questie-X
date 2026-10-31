@@ -1,8 +1,8 @@
 # Questie-X — Quest Helper & Community Quest Learning for Conquest of Azeroth
 
-> **[⬇ Download v1.6.9](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.9/Questie-X-CoA-v1.6.9-Bounded-Cache-Test.zip)**
+> **[⬇ Download v1.6.10](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.10/Questie-X-CoA-v1.6.10-Bounded-Cache-Test.zip)**
 
-**Current release: v1.6.9 — bounded-cache test build.**
+**Current release: v1.6.10 — map-canvas compatibility test build.**
 
 
 **Questie-X helps you find quests, understand where to go, and learn about custom quests that aren't in a normal World of Warcraft database.** It is an adapted version of the Questie-X quest helper for **Ascension: Conquest of Azeroth**, especially **Conquest Reborn**.
