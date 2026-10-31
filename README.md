@@ -1,8 +1,8 @@
 # Questie-X — Quest Helper & Community Quest Learning for Conquest of Azeroth
 
-> **[⬇ Download v1.6.9](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.9/Questie-X-CoA-v1.6.9-Bounded-Cache-Test.zip)**
+> **[⬇ Download v1.6.10](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.10/Questie-X-CoA-v1.6.10-Map-Canvas-Compatibility-Test.zip)**
 
-**Current release: v1.6.9 — bounded-cache test build.**
+**Current release: v1.6.10 — map-canvas compatibility build.**
 
 
 **Questie-X helps you find quests, understand where to go, and learn about custom quests that aren't in a normal World of Warcraft database.** It is an adapted version of the Questie-X quest helper for **Ascension: Conquest of Azeroth**, especially **Conquest Reborn**.
@@ -55,7 +55,7 @@ If you are updating from an older incompatible Questie fork, remove the old addo
 
 ## Current build and downloads
 
-**Current source build: v1.0.0.** CoA baseline with HBD map-data fix. Installable ZIPs and version history are published through [GitHub Releases](https://github.com/uncle-bone/Questie-X/releases).
+**Current CoA release: v1.6.10.** The package includes the map-canvas compatibility update; runtime compatibility still needs in-game validation. Installable ZIPs and version history are published through [GitHub Releases](https://github.com/uncle-bone/Questie-X/releases).
 
 ## Known limits / status
 
