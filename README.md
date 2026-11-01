@@ -19,10 +19,10 @@
 
 ## Version / repository status
 
-- **Repository release manifest:** v1.6.8 (prerelease). This is the source currently configured for automated release packaging; see `.release.json`.
-- **More recent test packages:** v1.6.10 map-canvas compatibility, v1.6.11–v1.6.12 CoADB dependency recovery, and v1.6.13 responsive-startup test have been distributed separately in development. **Do not assume these test ZIPs have been pushed into this repository or published as GitHub Releases.**
-- v1.6.13 aims to spread post-load initialization across frames, avoid duplicate login initialization, and reduce freezes; **actual in-game performance still needs testing.**
-- Existing quest DB content, map behavior, memory caching and BBLC25C sharing should be regression-tested whenever updating.
+- **Current stable release:** v1.6.32 — [direct ZIP download](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.32/Questie-X-v1.6.32.zip).
+- Packages the five addon folders from the current main branch.
+- This source-package release does not include the separately generated v1.6.25 map-syntax fix. Confirm Pale Reach map behavior in game.
+- Earlier startup FPS degradation has not been confirmed resolved in this build. Existing SavedVariables are preserved.
 
 ## Install
 
