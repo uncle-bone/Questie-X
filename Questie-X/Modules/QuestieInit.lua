@@ -2,6 +2,32 @@
 
 local QuestieInit = QuestieLoader:CreateModule("QuestieInit")
 local _QuestieInit = QuestieInit.private
+-- Lightweight startup diagnostics: no scriptProfile CVar or client restart required.
+local startupTiming = {samples = {}, total = 0}
+local function timedResume(co, label)
+    local clock = type(debugprofilestop) == "function" and debugprofilestop or nil
+    local before = clock and clock() or nil
+    local ok, err = coroutine.resume(co)
+    if before then
+        local ms = clock() - before
+        startupTiming.total = startupTiming.total + ms
+        if ms >= 12 then
+            local entries = startupTiming.samples
+            entries[#entries + 1] = string.format("%s %.1fms", label, ms)
+            if #entries > 30 then table.remove(entries, 1) end
+            if ms >= 40 and DEFAULT_CHAT_FRAME then
+                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cffffaa00Questie-X startup: %s took %.1f ms|r", label, ms))
+            end
+        end
+    end
+    return ok, err
+end
+SLASH_QUESTIESTARTUP1 = "/qxstartup"
+SlashCmdList.QUESTIESTARTUP = function()
+    print(string.format("Questie-X startup: %.1fms measured; %d slow resumes", startupTiming.total, #startupTiming.samples))
+    for _, line in ipairs(startupTiming.samples) do print(line) end
+end
+
 local compilationDeferred = false
 local needsCompilation = false
 
@@ -361,7 +387,7 @@ QuestieInit.Stages[2] = function()
         if keepWaiting then
             Questie:Debug(Questie.DEBUG_INFO, "[QuestieInit:Stage2] Quest cache validation timed out! Some data may still be loading.")
             keepWaiting = false
-            local ok, err = coroutine.resume(QuestieInit.Thread)
+            local ok, err = timedResume(QuestieInit.Thread, 'LoginStage')
             if not ok then
                 Questie:Debug(Questie.DEBUG_INFO, "[QuestieInit:Stage2] Resume failed (timeout): " .. tostring(err))
             end
