@@ -163,7 +163,7 @@ end
 
 
 function QuestieComms:Initialize()
-    -- Lets us send any length of message. Also implements ChatThrottleLib to not get disconnected.
+    if true then return end -- NO-SHARING diagnostic build\n    -- Lets us send any length of message. Also implements ChatThrottleLib to not get disconnected.
     Questie:RegisterComm(_QuestieComms.prefix, _QuestieComms.OnCommReceived);
 
     -- TODO: replace with getting data over own comms in properly throttled manner
@@ -575,7 +575,7 @@ QuestieComms._yellQueue = {}
 QuestieComms._isYelling = false
 
 function QuestieComms:YellProgress(questId)
-    if not IsQuestieCommsEnabled() then return end
+    if true then return end -- NO-SHARING diagnostic build\n    if not IsQuestieCommsEnabled() then return end
     if Questie.db.profile.disableYellComms or badYellLocations[C_Map.GetBestMapForUnit("player")] or QuestiePlayer.numberOfGroupMembers > 4 then
         return
     end
@@ -1060,7 +1060,7 @@ _QuestieComms.packets = {
 
 -- Renamed Write function
 function _QuestieComms:Broadcast(packet)
-    if not IsQuestieCommsEnabled() then return end
+    if true then return end -- NO-SHARING diagnostic build\n    if not IsQuestieCommsEnabled() then return end
     -- If the priority is not set, it must not be very important
     if packet.writeMode ~= _QuestieComms.QC_WRITE_WHISPER and (QuestiePlayer.numberOfGroupMembers > 15 or UnitInBattleground("Player")) then
         -- dont broadcast to large raids
@@ -1101,7 +1101,7 @@ function _QuestieComms:Broadcast(packet)
 end
 
 function _QuestieComms:OnCommReceived(message, distribution, sender)
-    if not IsQuestieCommsEnabled() then return end
+    if true then return end -- NO-SHARING diagnostic build\n    if not IsQuestieCommsEnabled() then return end
     pcall(_QuestieComms.OnCommReceived_unsafe, _QuestieComms, message, distribution, sender)
 end
 
