@@ -615,11 +615,23 @@ end
 function QuestieInit:Init()
     QuestieInit.Thread = coroutine.create(_QuestieInit.StartStageCoroutine)
 
+    local initStartTime = GetTime()
+    local slowResumeCount = 0
+    local maxResumeMs = 0
     local function resumeInit()
         if not QuestieInit.Thread or coroutine.status(QuestieInit.Thread) == "dead" then
             return -- coroutine finished or failed
         end
+        local resumeStart = GetTime()
         local ok, err = coroutine.resume(QuestieInit.Thread)
+        local resumeMs = (GetTime() - resumeStart) * 1000
+        if resumeMs > maxResumeMs then maxResumeMs = resumeMs end
+        if resumeMs >= 50 then
+            slowResumeCount = slowResumeCount + 1
+            if slowResumeCount <= 12 then
+                print(string.format("|cFFFFAA00[Questie-X Perf]|r Slow init slice: %.0f ms at %.1f sec after init start (slice #%d)", resumeMs, GetTime() - initStartTime, slowResumeCount))
+            end
+        end
         if not ok then
             local stack = debugstack(QuestieInit.Thread)
             local msg = "QuestieInit Thread CRASHED: " .. tostring(err) .. "\n" .. tostring(stack)
@@ -627,6 +639,8 @@ function QuestieInit:Init()
             print("|cFFFF0000" .. msg .. "|r")
         elseif coroutine.status(QuestieInit.Thread) ~= "dead" then
             C_Timer.After(0.02, resumeInit) -- continue yielding using the timer shim
+        else
+            print(string.format("|cFF4DDBFF[Questie-X Perf]|r Init completed in %.1f sec; %d slow slices; worst %.0f ms", GetTime() - initStartTime, slowResumeCount, maxResumeMs))
         end
     end
 
