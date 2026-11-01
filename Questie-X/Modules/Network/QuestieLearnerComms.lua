@@ -258,18 +258,17 @@ local function GetCommsTuning()
     return true, 9, 3.5, 6, 2
 end
 
--- TEMPORARY NO-SHARING DIAGNOSTIC BUILD.
--- Keep the existing cooperative BBLC25C channel membership behavior,
--- but never register receive handlers or start sharing queues/reinforcement.
 function QuestieLearnerComms:Initialize()
-    _hiddenChannelId = EnsureLearnerChannel()
-    QuestieCompat.C_Timer.NewTicker(10, function()
-        _hiddenChannelId = EnsureLearnerChannel()
+    DebugLog("DEVELOP", "Initializing QuestieLearnerComms")
+    AceComm:RegisterComm(addonPrefix, function(prefix, message, distribution, sender)
+        QuestieLearnerComms:OnCommReceived(prefix, message, distribution, sender)
     end)
+    _hiddenChannelId = EnsureLearnerChannel()
+    QuestieCompat.C_Timer.NewTicker(0.5, function() _QuestieLearnerComms:ProcessQueues() end)
+    QuestieCompat.C_Timer.NewTicker(60, function() _QuestieLearnerComms:ProcessReinforcement() end)
 end
 
 function _QuestieLearnerComms:ProcessReinforcement()
-    if true then return end -- NO-SHARING diagnostic\n    if not QuestieLearner.data then return end
     
     local categories = {"npcs", "quests", "items", "objects"}
     local category = categories[math.random(table.getn(categories))]
@@ -297,7 +296,6 @@ function _QuestieLearnerComms:ProcessReinforcement()
 end
 
 function QuestieLearnerComms:BroadcastLearnedData(op, entityType, entityId, data)
-    if true then return end -- NO-SHARING diagnostic\n    local commsEnabled = GetCommsTuning()
     if not commsEnabled or not PublicSharingEnabled() then return end
     -- Allow local learned data to queue while the shared channel reconnects.
     EnsureLearnerChannel()
@@ -332,7 +330,6 @@ function QuestieLearnerComms:BroadcastLearnedData(op, entityType, entityId, data
 end
 
 function _QuestieLearnerComms:QueueMessage(encodedMessage)
-    if true then return end -- NO-SHARING diagnostic\n    local commsEnabled = GetCommsTuning()
     if not commsEnabled or not PublicSharingEnabled() then return end
     -- Prevent unbounded growth while offline or during long channel outages.
     if rateLimitQueueTail - rateLimitQueueHead >= MAX_PENDING then
@@ -356,7 +353,6 @@ function _QuestieLearnerComms:QueueMessage(encodedMessage)
 end
 
 function _QuestieLearnerComms:ProcessQueues()
-    if true then return end -- NO-SHARING diagnostic\n    local commsEnabled, tunedBucketCapacity, tunedMinChatInterval, normalIncomingCount, combatIncomingCount = GetCommsTuning()
     bucketCapacity = tunedBucketCapacity
     tokenRefillRate = bucketCapacity / bucketWindow
     minChatInterval = tunedMinChatInterval
@@ -438,7 +434,6 @@ frame:SetScript("OnEvent", function(self, event, msg, sender, _, _, _, _, _, cha
 end)
 
 function QuestieLearnerComms:OnCommReceived(prefix, message, distribution, sender)
-    if true then return end -- NO-SHARING diagnostic\n    local commsEnabled = GetCommsTuning()
     if not commsEnabled or not PublicSharingEnabled() then return end
     if prefix == addonPrefix and sender ~= UnitName("player") then
         QueueIncoming(message, sender)
@@ -446,7 +441,6 @@ function QuestieLearnerComms:OnCommReceived(prefix, message, distribution, sende
 end
 
 function _QuestieLearnerComms:ProcessRawMessage(encodedMsg, sender)
-    if true then return end -- NO-SHARING diagnostic\n    if not IsSenderTrusted(sender) then return end
 
     -- 1. Decode & Decompress
     local compressed = LibDeflate:DecodeForPrint(encodedMsg)
