@@ -465,11 +465,15 @@ function QuestieMap.ProcessQueue()
         return
     end
 
+    if not HBDPins then return end
     local scaleValue = QuestieMap.GetScaleValue()
     local started = type(debugprofilestop) == "function" and debugprofilestop() or nil
-    -- Keep the draw budget bounded while allowing pending icons to finish.
+    -- Always make forward progress, even when the prior icon took longer
+    -- than the normal frame budget. Otherwise a busy client can starve pins.
+    local processed = 0
     for _ = 1, math.min(12, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
-        if started and debugprofilestop() - started >= 2 then break end
+        if processed > 0 and started and debugprofilestop() - started >= 2 then break end
+        processed = processed + 1
         local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
             local frame = mapDrawCall[2];
