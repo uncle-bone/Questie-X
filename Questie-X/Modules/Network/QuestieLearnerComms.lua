@@ -12,18 +12,28 @@ local AceComm = LibStub("AceComm-3.0")
 local addonPrefix = "QuestieLearner"
 -- Emergency incident mitigation: pause all learner outbound broadcasts.
 -- Keep receiving, local learning, saved data and existing settings intact.
-local EMERGENCY_PAUSE_OUTBOUND = true
+local EMERGENCY_PAUSE_OUTBOUND = true -- Remain fail-closed until SmartSync v3 is complete
 -- Shared BBLC25C membership is cooperative: each addon can join if needed.
 -- Never leave, renumber, or alter chat frame subscriptions.
 local hiddenChannelName = "BBLC25C"
 local lastJoinAttempt = -100
 local joinCooldown = 30
 local loginReadyAt = nil
+local loadingPaused = true
+local outboundResumeAt = math.huge
 -- Never claim /1 during login. Fail closed until a normal channel occupies /1.
 local startupFrame = CreateFrame("Frame")
 startupFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-startupFrame:SetScript("OnEvent", function()
-    loginReadyAt = GetTime() + 35
+startupFrame:RegisterEvent("PLAYER_LEAVING_WORLD")
+startupFrame:SetScript("OnEvent", function(self, event)
+    if event == "PLAYER_LEAVING_WORLD" then
+        loadingPaused = true
+        outboundResumeAt = math.huge
+    else
+        loadingPaused = false
+        outboundResumeAt = GetTime() + 10
+        loginReadyAt = GetTime() + 35
+    end
 end)
 local function SafeToJoin()
     if not loginReadyAt or GetTime() < loginReadyAt then return false end
@@ -300,7 +310,7 @@ function _QuestieLearnerComms:ProcessReinforcement()
 end
 
 function QuestieLearnerComms:BroadcastLearnedData(op, entityType, entityId, data)
-    if EMERGENCY_PAUSE_OUTBOUND then return end
+    if EMERGENCY_PAUSE_OUTBOUND or loadingPaused or GetTime() < outboundResumeAt then return end
     if not GetCommsTuning() or not PublicSharingEnabled() then return end
     -- Allow local learned data to queue while the shared channel reconnects.
     EnsureLearnerChannel()
@@ -381,7 +391,7 @@ function _QuestieLearnerComms:ProcessQueues()
     lastTokenUpdate = now
 
     -- 2. Drain Outgoing Queue
-    if not EMERGENCY_PAUSE_OUTBOUND and rateLimitQueueHead <= rateLimitQueueTail and currentTokens >= 1 and (now - lastChatMessageTime) >= minChatInterval then
+    if not EMERGENCY_PAUSE_OUTBOUND and not loadingPaused and now >= outboundResumeAt and rateLimitQueueHead <= rateLimitQueueTail and currentTokens >= 1 and (now - lastChatMessageTime) >= minChatInterval then
         -- LootCollector may join after login; hold queued data until it is available.
         _hiddenChannelId = EnsureLearnerChannel()
         if _hiddenChannelId > 0 then
@@ -413,7 +423,11 @@ function _QuestieLearnerComms:ProcessQueues()
 
     -- 3. Process Incoming Queue (Combat Aware)
     local processCount = (InCombatLockdown() and combatIncomingCount or normalIncomingCount) or 1
+    if loadingPaused then processCount = 0 end
+    processCount = math_min(processCount, 2)
+    local incomingStartedAt = debugprofilestop and debugprofilestop() or nil
     for i = 1, processCount do
+        if incomingStartedAt and debugprofilestop() - incomingStartedAt >= 1 then break end
         if incomingMessageQueueHead > incomingMessageQueueTail then break end
         local rawMsg = incomingMessageQueue[incomingMessageQueueHead]
         incomingMessageQueue[incomingMessageQueueHead] = nil
@@ -434,21 +448,17 @@ frame:SetScript("OnEvent", function(self, event, msg, sender, _, _, _, _, _, cha
     if not GetCommsTuning() or not PublicSharingEnabled() then return end
     if IsSharedChannel(channelId, channelName) and sender ~= UnitName("player")
         and type(msg) == "string" then
-        if msg:sub(1, 4) == "QX2:" then
+        if msg:sub(1, 4) == "QX3:" then
             receivedCount = receivedCount + 1
             AcceptChunk(msg, sender)
-        elseif msg:sub(1, 4) == "QX1:" then
-            receivedCount = receivedCount + 1
-            QueueIncoming(msg:sub(5):gsub("||", "|"), sender)
+        -- Legacy QX1/QX2 messages are intentionally ignored.
         end
     end
 end)
 
 function QuestieLearnerComms:OnCommReceived(prefix, message, distribution, sender)
     if not GetCommsTuning() or not PublicSharingEnabled() then return end
-    if prefix == addonPrefix and sender ~= UnitName("player") then
-        QueueIncoming(message, sender)
-    end
+    -- Legacy AceComm payloads are not SmartSync v3; reject before decoding.
 end
 
 function _QuestieLearnerComms:ProcessRawMessage(encodedMsg, sender)
