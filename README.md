@@ -1,6 +1,6 @@
 # Questie-X CoA
 
-> **[⬇ Download v1.6.14 test build](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.14/Questie-X-CoA-v1.6.14-Sparse-ID-Memory-Test.zip)** — sparse-ID memory test; prerelease, in-game freeze behavior still needs confirmation.
+> **[⬇ Download current stable v1.6.32](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.32/Questie-X-v1.6.32.zip)** — [release notes](https://github.com/uncle-bone/Questie-X/releases/tag/v1.6.32).
 
 **Quest tracking, map guidance, and community quest learning for Ascension: Conquest of Azeroth / Conquest Reborn (WoW 3.3.5a, Interface 30300).**
 
