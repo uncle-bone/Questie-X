@@ -11,7 +11,7 @@
 ## Notes-esES: Ayundante de misión
 ## Notes-ptBR: Ajudante de missão
 ## Notes-frFR: Assistant de quête
-## Version: 1.6.16
+## Version: 1.6.26
 ## OptionalDeps: Ace3, CallbackHandler-1.0, HereBeDragons, LibDataBroker-1.1, LibDBIcon-1.0, LibSharedMedia-3.0, LibStub, LibUIDropDownMenu, Questie-X-WotLKDB, Questie-X-ClassicDB, Questie-X-TBCDB, Questie-X-AscensionDB, Questie-X-EbonholdDB
 ## SavedVariables: QuestieConfig, QuestieLearnerDB, QuestieCacheDB, QuestieJourneyDB
 ## SavedVariablesPerCharacter: QuestieConfigCharacter
@@ -202,6 +202,6 @@ Modules\QuestieProfiler.lua
 # Main
 Questie.lua
 
-## X-CoA-Version: 1.6.16
+## X-CoA-Version: 1.6.26
 ## X-Maintainer: Uncle Bone
 ## X-Website: https://github.com/uncle-bone/Questie-X
