@@ -330,7 +330,7 @@ function QuestieLearnerComms:BroadcastLearnedData(op, entityType, entityId, data
 end
 
 function _QuestieLearnerComms:QueueMessage(encodedMessage)
-    if not commsEnabled or not PublicSharingEnabled() then return end
+    if not GetCommsTuning() or not PublicSharingEnabled() then return end
     -- Prevent unbounded growth while offline or during long channel outages.
     if rateLimitQueueTail - rateLimitQueueHead >= MAX_PENDING then
         sendErrors = sendErrors + 1
@@ -421,7 +421,7 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("CHAT_MSG_CHANNEL")
 frame:SetScript("OnEvent", function(self, event, msg, sender, _, _, _, _, _, channelId, channelName)
     local commsEnabled = GetCommsTuning()
-    if not commsEnabled or not PublicSharingEnabled() then return end
+    if not GetCommsTuning() or not PublicSharingEnabled() then return end
     if IsSharedChannel(channelId, channelName) and sender ~= UnitName("player")
         and type(msg) == "string" then
         if msg:sub(1, 4) == "QX2:" then
@@ -435,7 +435,7 @@ frame:SetScript("OnEvent", function(self, event, msg, sender, _, _, _, _, _, cha
 end)
 
 function QuestieLearnerComms:OnCommReceived(prefix, message, distribution, sender)
-    if not commsEnabled or not PublicSharingEnabled() then return end
+    if not GetCommsTuning() or not PublicSharingEnabled() then return end
     if prefix == addonPrefix and sender ~= UnitName("player") then
         QueueIncoming(message, sender)
     end
