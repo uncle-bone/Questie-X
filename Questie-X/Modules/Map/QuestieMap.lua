@@ -231,6 +231,22 @@ end
 
 local mapDrawQueue = {};
 local minimapDrawQueue = {};
+-- Use queue heads instead of O(n) table.remove(queue, 1) per icon.
+local mapDrawHead, minimapDrawHead = 1, 1
+local function PopDraw(queue, minimap)
+    local head = minimap and minimapDrawHead or mapDrawHead
+    local entry = queue[head]
+    if not entry then return nil end
+    queue[head] = false
+    head = head + 1
+    if minimap then minimapDrawHead = head else mapDrawHead = head end
+    if head > #queue then
+        for i = 1, #queue do queue[i] = nil end
+        if minimap then minimapDrawHead = 1 else mapDrawHead = 1 end
+    end
+    return entry
+end
+
 
 QuestieMap._mapDrawQueue = mapDrawQueue
 QuestieMap._minimapDrawQueue = minimapDrawQueue
@@ -425,8 +441,10 @@ function QuestieMap.ProcessQueue()
     end
 
     local scaleValue = QuestieMap.GetScaleValue()
-    for _ = 1, math.min(24, math.max(#mapDrawQueue, #minimapDrawQueue)) do
-        local mapDrawCall = tremove(mapDrawQueue, 1);
+    local started = type(debugprofilestop) == "function" and debugprofilestop() or nil
+    for _ = 1, math.min(12, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
+        if started and debugprofilestop() - started >= 3 then break end
+        local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
             local frame = mapDrawCall[2];
             HBDPins:AddWorldMapIconMap(tunpack(mapDrawCall));
@@ -436,7 +454,7 @@ function QuestieMap.ProcessQueue()
             QuestieMap.utils:SetDrawOrder(frame);
         end
 
-        local minimapDrawCall = tremove(minimapDrawQueue, 1);
+        local minimapDrawCall = PopDraw(minimapDrawQueue, true);
         if minimapDrawCall then
             local frame = minimapDrawCall[2];
             HBDPins:AddMinimapIconMap(tunpack(minimapDrawCall));
