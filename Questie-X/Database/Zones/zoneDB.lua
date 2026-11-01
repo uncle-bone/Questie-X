@@ -133,8 +133,12 @@ function ZoneDB:ApplyCustomZones()
             end
         end
 
-        if data and type(data.parentMapID) == "number" and _ZoneDB.areaIdToUiMapId[data.parentMapID] == nil then
-            _ZoneDB.areaIdToUiMapId[data.parentMapID] = uiMapId
+        -- Custom client maps have separate area IDs and UI map IDs.  Do not
+        -- infer the area mapping from parentMapID: that redirects unrelated
+        -- parent-zone quest pins onto an arbitrary child map.
+        if data and type(data.areaID) == "number" then
+            _ZoneDB.areaIdToUiMapId[data.areaID] = uiMapId
+            uiMapIdToAreaIdCache[uiMapId] = data.areaID
         end
     end
 end
