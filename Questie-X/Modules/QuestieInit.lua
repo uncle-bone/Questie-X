@@ -395,16 +395,23 @@ QuestieInit.Stages[3] = function() -- run as a coroutine
         elapsed = GetTime() - waitStart
     end
 
-    -- Always re-compile on custom servers to pick up QuestieLearner changes from SavedVariables,
-    -- or if compilation was explicitly deferred/needed.
-    local isCustomServer = Questie.IsAscension or Questie.IsEbonhold or Questie.IsValanior or QuestieServer:IsAnyDBPluginEnabled()
-    if isCustomServer or needsCompilation or (not Questie.db.global.dbIsCompiled) then
-        Questie:Debug(Questie.DEBUG_CRITICAL, "[QuestieInit:Stage3] Starting compilation (Server=" .. tostring(isCustomServer) .. ", Needed=" .. tostring(needsCompilation) .. ")")
+    -- Live plugin and learner overrides do not require rebuilding the entire
+    -- WotLK binary database on every custom-server login.
+    local cacheBucket = Questie.dbCache and Questie.dbCache.global or Questie.db.global
+    local hasCompiledCache = cacheBucket
+        and type(cacheBucket.npcBin) == "string" and type(cacheBucket.npcPtrs) == "string"
+        and type(cacheBucket.objBin) == "string" and type(cacheBucket.objPtrs) == "string"
+        and type(cacheBucket.questBin) == "string" and type(cacheBucket.questPtrs) == "string"
+        and type(cacheBucket.itemBin) == "string" and type(cacheBucket.itemPtrs) == "string"
+    if needsCompilation or (not Questie.db.global.dbIsCompiled) or (not hasCompiledCache) then
+        Questie:Debug(Questie.DEBUG_CRITICAL, "[QuestieInit:Stage3] Rebuilding missing/outdated database cache")
         if not QuestieDB.questData then
             loadFullDatabase()
         end
         QuestieDBCompiler:Compile()
         QuestieDB:Initialize()
+    else
+        Questie:Debug(Questie.DEBUG_INFO, "[QuestieInit:Stage3] Reusing compiled cache; plugin and learner overrides stay active")
     end
 
     -- register events that rely on questie being initialized
