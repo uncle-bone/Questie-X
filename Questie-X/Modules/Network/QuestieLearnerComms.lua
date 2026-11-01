@@ -353,7 +353,7 @@ function _QuestieLearnerComms:QueueMessage(encodedMessage)
 end
 
 function _QuestieLearnerComms:ProcessQueues()
-    local commsEnabled, tunedBucketCapacity, tunedMinChatInterval = GetCommsTuning()
+    local commsEnabled, tunedBucketCapacity, tunedMinChatInterval, normalIncomingCount, combatIncomingCount = GetCommsTuning()
     bucketCapacity = tunedBucketCapacity or 9
     tokenRefillRate = bucketCapacity / bucketWindow
     minChatInterval = tunedMinChatInterval or 3.5
@@ -402,7 +402,7 @@ function _QuestieLearnerComms:ProcessQueues()
     end
 
     -- 3. Process Incoming Queue (Combat Aware)
-    local processCount = InCombatLockdown() and combatIncomingCount or normalIncomingCount
+    local processCount = (InCombatLockdown() and combatIncomingCount or normalIncomingCount) or 1
     for i = 1, processCount do
         if incomingMessageQueueHead > incomingMessageQueueTail then break end
         local rawMsg = incomingMessageQueue[incomingMessageQueueHead]
