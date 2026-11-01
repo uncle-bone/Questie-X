@@ -251,6 +251,28 @@ local function EnqueueUnique(queue, pending, ...)
     end
 end
 
+-- Prioritize current-zone pins without reordering the complete global queue.
+-- A bounded lookahead avoids scanning thousands of entries on every frame.
+local function PromoteCurrentZone(queue, head)
+    local zone = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+    if not zone then return end
+    local last = math.min(#queue, head + 96)
+    for i = head, last do
+        local entry = queue[i]
+        if type(entry) == "table" and entry[3] == zone then
+            if i ~= head then
+                local old = queue[head]
+                queue[head], queue[i] = entry, old
+                -- The pending-index registry must follow swapped frames.
+                local pending = queue == mapDrawQueue and pendingWorld or pendingMini
+                if entry[2] then pending[entry[2]] = head end
+                if type(old) == "table" and old[2] then pending[old[2]] = i end
+            end
+            return
+        end
+    end
+end
+
 local function PopDraw(queue, minimap)
     local head = minimap and minimapDrawHead or mapDrawHead
     local pending = minimap and pendingMini or pendingWorld
@@ -322,7 +344,7 @@ function QuestieMap:InitializeQueue()
     if (not isInInstance) or instanceType ~= "raid" then
         isDrawQueueDisabled = false
         if not drawTimer then
-            drawTimer = C_Timer.NewTicker(0.05, QuestieMap.ProcessQueue)
+            drawTimer = C_Timer.NewTicker(0.02, QuestieMap.ProcessQueue)
             fadeLogicTimerShown = C_Timer.NewTicker(0.1, function()
                 if fadeLogicCoroutine and coroutine.status(fadeLogicCoroutine) == "suspended" then
                     local success, errorMsg = coroutine.resume(fadeLogicCoroutine)
@@ -492,6 +514,7 @@ function QuestieMap.ProcessQueue()
     for _ = 1, math.min(12, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
         if processed > 0 and started and debugprofilestop() - started >= 2 then break end
         processed = processed + 1
+        PromoteCurrentZone(mapDrawQueue, mapDrawHead)
         local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
             local frame = mapDrawCall[2];
@@ -502,6 +525,7 @@ function QuestieMap.ProcessQueue()
             QuestieMap.utils:SetDrawOrder(frame);
         end
 
+        PromoteCurrentZone(minimapDrawQueue, minimapDrawHead)
         local minimapDrawCall = PopDraw(minimapDrawQueue, true);
         if minimapDrawCall then
             local frame = minimapDrawCall[2];
