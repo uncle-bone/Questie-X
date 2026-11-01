@@ -236,6 +236,9 @@ local mapDrawHead, minimapDrawHead = 1, 1
 -- One pending draw per icon frame per map; repeat refreshes replace their args.
 local pendingWorld = setmetatable({}, { __mode = "k" })
 local pendingMini = setmetatable({}, { __mode = "k" })
+local paleQueued, paleProcessed, paleFailed, worldProcessed = 0, 0, 0, 0
+local completionReported = false
+local function MapNotice(msg) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("Questie-X: " .. msg) end end
 local function EnqueueUnique(queue, pending, ...)
     local args = { ... }
     local frame = args[2]
@@ -321,7 +324,7 @@ local function PrintMapQueueStatus()
             end
         end
     end
-    local msg = string.format("Questie-X map: %s | world pending=%d | minimap pending=%d | registered=%d | shown=%d", status, world, mini, registered, visible)
+    local msg = string.format("Questie-X map: %s | world pending=%d | minimap pending=%d | registered=%d | shown=%d | Pale Reach queued=%d processed=%d errors=%d | playerMap=%s", status, world, mini, registered, visible, paleQueued, paleProcessed, paleFailed, tostring(C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")))
     if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(msg) else print(msg) end
 end
 SLASH_QUESTIEXMAPSTATUS1 = "/qxstatus"
@@ -502,6 +505,8 @@ function QuestieMap:QueueDraw(drawType, ...)
             end
         end
         if (drawType == QuestieMap.ICON_MAP_TYPE) then
+            local args = { ... }
+            if args[3] == 2063 then paleQueued = paleQueued + 1 end
             EnqueueUnique(mapDrawQueue, pendingWorld, ...);
         elseif (drawType == QuestieMap.ICON_MINIMAP_TYPE) then
             EnqueueUnique(minimapDrawQueue, pendingMini, ...);
@@ -513,6 +518,10 @@ function QuestieMap.ProcessQueue()
     -- Queue heads, not next(), determine whether pending work exists.
     -- Tombstones remain in these arrays until PopDraw compacts them.
     if mapDrawHead > #mapDrawQueue and minimapDrawHead > #minimapDrawQueue then
+        if worldProcessed > 0 and not completionReported then
+            MapNotice(string.format("Map loading complete: %d world icons; Pale Reach %d queued, %d processed, %d errors.", worldProcessed, paleQueued, paleProcessed, paleFailed))
+            completionReported = true
+        end
         return
     end
 
@@ -529,7 +538,14 @@ function QuestieMap.ProcessQueue()
         local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
             local frame = mapDrawCall[2];
-            HBDPins:AddWorldMapIconMap(tunpack(mapDrawCall));
+            local ok, err = pcall(HBDPins.AddWorldMapIconMap, HBDPins, tunpack(mapDrawCall))
+            if mapDrawCall[3] == 2063 then
+                paleProcessed = paleProcessed + 1
+                if not ok then paleFailed = paleFailed + 1; if paleFailed <= 3 then MapNotice("Pale Reach pin error: " .. tostring(err)) end end
+            end
+            worldProcessed = worldProcessed + 1
+            if worldProcessed == 1 then MapNotice("Map icon loading started; custom zone diagnostics active.") end
+            if worldProcessed % 500 == 0 then MapNotice(string.format("Map icons: %d processed, %d pending; Pale Reach %d.", worldProcessed, math.max(0, #mapDrawQueue - mapDrawHead + 1), paleProcessed)) end
 
             local size = (16 * (frame.data.IconScale or 1) * (Questie.db.profile.globalScale or 0.7)) * scaleValue;
             frame:SetSize(size, size)
