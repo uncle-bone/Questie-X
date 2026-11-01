@@ -959,20 +959,14 @@ function QuestieDBCompiler:CompileTableCoroutine(tbl, types, order, lookup, data
     local count = 0
     local indexLookup = {};
 
-    local max_id = 0
+    -- Preserve deterministic numeric ordering without scanning every missing ID.
+    -- Conquest Reborn uses sparse IDs; scanning 0..max_id can stall login/reload.
     for id in pairs(tbl) do
         assert(type(id) == "number", "CompileTableCoroutine: tbl id is not a number")
-        if id > max_id then
-            max_id = id
-        end
+        count = count + 1
+        indexLookup[count] = id
     end
-    -- iterate table tbl in numerical order to get ids in order to indexLoopup list. iterating over pairs(tbl) gives ids in non determined order
-    for id=0,max_id do
-        if tbl[id] then
-            count = count + 1
-            indexLookup[count] = id
-        end
-    end
+    table.sort(indexLookup)
     count = count + 1
 
     local index = 0
