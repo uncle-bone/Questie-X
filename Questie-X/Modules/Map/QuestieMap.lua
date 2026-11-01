@@ -241,9 +241,11 @@ local function EnqueueUnique(queue, pending, ...)
     local frame = args[2]
     if not frame then return end
     local index = pending[frame]
-    if index and queue[index] then
+    if index and type(queue[index]) == "table" then
+        -- Refresh the pending draw in place; never discard the latest coordinates.
         queue[index] = args
     else
+        -- A cancelled/tombstoned draw must not suppress a new icon.
         queue[#queue + 1] = args
         pending[frame] = #queue
     end
@@ -457,13 +459,16 @@ function QuestieMap:QueueDraw(drawType, ...)
 end
 
 function QuestieMap.ProcessQueue()
-    if (not next(mapDrawQueue) and (not next(minimapDrawQueue))) then
+    -- Queue heads, not next(), determine whether pending work exists.
+    -- Tombstones remain in these arrays until PopDraw compacts them.
+    if mapDrawHead > #mapDrawQueue and minimapDrawHead > #minimapDrawQueue then
         return
     end
 
     local scaleValue = QuestieMap.GetScaleValue()
     local started = type(debugprofilestop) == "function" and debugprofilestop() or nil
-    for _ = 1, math.min(6, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
+    -- Keep the draw budget bounded while allowing pending icons to finish.
+    for _ = 1, math.min(12, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
         if started and debugprofilestop() - started >= 2 then break end
         local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
