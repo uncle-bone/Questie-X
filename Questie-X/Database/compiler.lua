@@ -19,7 +19,9 @@ local lshift = bit.lshift
 
 
 -- how fast to run operations (lower = slower but less lag)
-local TICKS_PER_YIELD = 48
+-- Keep compilation slices short on the 3.3.5a client to avoid long frame stalls.
+-- Total compile time may increase, but the UI should remain more responsive.
+local TICKS_PER_YIELD = 8
 local TICKS_PER_YIELD_DEBUG = TICKS_PER_YIELD * 3
 
 local function safeYield()
