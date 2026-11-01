@@ -256,8 +256,7 @@ end
 
 -- Prioritize current-zone pins without reordering the complete global queue.
 -- A short bounded lookahead limits scanning work while keeping nearby pins responsive.
-local function PromoteCurrentZone(queue, head)
-    local zone = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+local function PromoteCurrentZone(queue, head, zone)
     if not zone then return end
     local last = math.min(#queue, head + 32)
     for i = head, last do
@@ -531,10 +530,12 @@ function QuestieMap.ProcessQueue()
     -- Always make forward progress, even when the prior icon took longer
     -- than the normal frame budget. Otherwise a busy client can starve pins.
     local processed = 0
+    -- Resolve the player map once per tick, not twice for every queued icon.
+    local playerZone = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
     for _ = 1, math.min(6, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
         if processed > 0 and started and debugprofilestop() - started >= 1 then break end
         processed = processed + 1
-        PromoteCurrentZone(mapDrawQueue, mapDrawHead)
+        PromoteCurrentZone(mapDrawQueue, mapDrawHead, playerZone)
         local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
             local frame = mapDrawCall[2];
@@ -552,7 +553,7 @@ function QuestieMap.ProcessQueue()
             QuestieMap.utils:SetDrawOrder(frame);
         end
 
-        PromoteCurrentZone(minimapDrawQueue, minimapDrawHead)
+        PromoteCurrentZone(minimapDrawQueue, minimapDrawHead, playerZone)
         local minimapDrawCall = PopDraw(minimapDrawQueue, true);
         if minimapDrawCall then
             local frame = minimapDrawCall[2];
