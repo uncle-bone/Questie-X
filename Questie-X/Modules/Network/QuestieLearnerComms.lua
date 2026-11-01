@@ -296,7 +296,7 @@ function _QuestieLearnerComms:ProcessReinforcement()
 end
 
 function QuestieLearnerComms:BroadcastLearnedData(op, entityType, entityId, data)
-    if not commsEnabled or not PublicSharingEnabled() then return end
+    if not GetCommsTuning() or not PublicSharingEnabled() then return end
     -- Allow local learned data to queue while the shared channel reconnects.
     EnsureLearnerChannel()
     if not data or type(data) ~= "table" then return end
@@ -353,9 +353,10 @@ function _QuestieLearnerComms:QueueMessage(encodedMessage)
 end
 
 function _QuestieLearnerComms:ProcessQueues()
-    bucketCapacity = tunedBucketCapacity
+    local commsEnabled, tunedBucketCapacity, tunedMinChatInterval = GetCommsTuning()
+    bucketCapacity = tunedBucketCapacity or 9
     tokenRefillRate = bucketCapacity / bucketWindow
-    minChatInterval = tunedMinChatInterval
+    minChatInterval = tunedMinChatInterval or 3.5
     currentTokens = math_min(bucketCapacity, currentTokens)
     if not commsEnabled or not PublicSharingEnabled() then
         rateLimitQueue = {}
