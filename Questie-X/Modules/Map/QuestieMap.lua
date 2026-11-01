@@ -310,7 +310,18 @@ local function PrintMapQueueStatus()
         if type(minimapDrawQueue[i]) == "table" then mini = mini + 1 end
     end
     local status = (world + mini == 0) and "READY" or "PROCESSING"
-    local msg = string.format("Questie-X map: %s | world pending=%d | minimap pending=%d", status, world, mini)
+    -- Count actual registered frames; queue completion is not proof of visible pins.
+    local registered, visible = 0, 0
+    for _, frames in pairs(QuestieMap.questIdFrames) do
+        for _, frameName in pairs(frames) do
+            local frame = _G[frameName]
+            if frame then
+                registered = registered + 1
+                if frame.IsShown and frame:IsShown() then visible = visible + 1 end
+            end
+        end
+    end
+    local msg = string.format("Questie-X map: %s | world pending=%d | minimap pending=%d | registered=%d | shown=%d", status, world, mini, registered, visible)
     if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(msg) else print(msg) end
 end
 SLASH_QUESTIEXMAPSTATUS1 = "/qxstatus"
