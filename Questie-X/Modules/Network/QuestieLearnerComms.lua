@@ -10,6 +10,9 @@ local AceSerializer = LibStub("AceSerializer-3.0")
 local AceComm = LibStub("AceComm-3.0")
 
 local addonPrefix = "QuestieLearner"
+-- Emergency incident mitigation: pause all learner outbound broadcasts.
+-- Keep receiving, local learning, saved data and existing settings intact.
+local EMERGENCY_PAUSE_OUTBOUND = true
 -- Shared BBLC25C membership is cooperative: each addon can join if needed.
 -- Never leave, renumber, or alter chat frame subscriptions.
 local hiddenChannelName = "BBLC25C"
@@ -269,6 +272,7 @@ function QuestieLearnerComms:Initialize()
 end
 
 function _QuestieLearnerComms:ProcessReinforcement()
+    if EMERGENCY_PAUSE_OUTBOUND then return end
     
     local categories = {"npcs", "quests", "items", "objects"}
     local category = categories[math.random(table.getn(categories))]
@@ -296,6 +300,7 @@ function _QuestieLearnerComms:ProcessReinforcement()
 end
 
 function QuestieLearnerComms:BroadcastLearnedData(op, entityType, entityId, data)
+    if EMERGENCY_PAUSE_OUTBOUND then return end
     if not GetCommsTuning() or not PublicSharingEnabled() then return end
     -- Allow local learned data to queue while the shared channel reconnects.
     EnsureLearnerChannel()
@@ -330,6 +335,7 @@ function QuestieLearnerComms:BroadcastLearnedData(op, entityType, entityId, data
 end
 
 function _QuestieLearnerComms:QueueMessage(encodedMessage)
+    if EMERGENCY_PAUSE_OUTBOUND then return end
     if not GetCommsTuning() or not PublicSharingEnabled() then return end
     -- Prevent unbounded growth while offline or during long channel outages.
     if rateLimitQueueTail - rateLimitQueueHead >= MAX_PENDING then
@@ -353,6 +359,10 @@ function _QuestieLearnerComms:QueueMessage(encodedMessage)
 end
 
 function _QuestieLearnerComms:ProcessQueues()
+    if EMERGENCY_PAUSE_OUTBOUND then
+        rateLimitQueue = {}
+        rateLimitQueueHead, rateLimitQueueTail = 1, 0
+    end
     local commsEnabled, tunedBucketCapacity, tunedMinChatInterval, normalIncomingCount, combatIncomingCount = GetCommsTuning()
     bucketCapacity = tunedBucketCapacity or 9
     tokenRefillRate = bucketCapacity / bucketWindow
@@ -371,7 +381,7 @@ function _QuestieLearnerComms:ProcessQueues()
     lastTokenUpdate = now
 
     -- 2. Drain Outgoing Queue
-    if rateLimitQueueHead <= rateLimitQueueTail and currentTokens >= 1 and (now - lastChatMessageTime) >= minChatInterval then
+    if not EMERGENCY_PAUSE_OUTBOUND and rateLimitQueueHead <= rateLimitQueueTail and currentTokens >= 1 and (now - lastChatMessageTime) >= minChatInterval then
         -- LootCollector may join after login; hold queued data until it is available.
         _hiddenChannelId = EnsureLearnerChannel()
         if _hiddenChannelId > 0 then
