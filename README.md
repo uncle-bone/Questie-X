@@ -1,76 +1,42 @@
-# Questie-X — Quest Helper & Community Quest Learning for Conquest of Azeroth
+# Questie-X CoA
 
-> **[⬇ Download v1.6.10](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.10/Questie-X-CoA-v1.6.10-Map-Canvas-Compatibility-Test.zip)**
+**Quest tracking, map guidance, and community quest learning for Ascension: Conquest of Azeroth / Conquest Reborn (WoW 3.3.5a, Interface 30300).**
 
-**Current release: v1.6.10 — map-canvas compatibility build.**
+[Releases](https://github.com/uncle-bone/Questie-X/releases) · [Issues](https://github.com/uncle-bone/Questie-X/issues)
 
+## Features
 
-**Questie-X helps you find quests, understand where to go, and learn about custom quests that aren't in a normal World of Warcraft database.** It is an adapted version of the Questie-X quest helper for **Ascension: Conquest of Azeroth**, especially **Conquest Reborn**.
+- World-map and minimap markers for quest givers, turn-ins, objectives, creatures, and objects where data is available.
+- Quest-log tracking, searchable quest information, tooltips, navigation and Journey history.
+- WotLK, Ascension and CoA database plugins, including custom quest overrides.
+- Questie Learner for collecting and retaining supported custom quest discoveries.
+- Community discovery sharing via **BBLC25C** alongside LootCollector and DBM-CoA, using distinct message formats.
+- Legacy-client map, startup, cache and communication compatibility adaptations.
 
-## What you see in game
+**Accuracy notice:** Stock WotLK quests are not automatically available on Conquest Reborn. Custom quest locations and learned records can be incomplete. Map compatibility with every UI addon, and reliable learning across mixed client versions, have not been verified universally.
 
-- **Quest icons on your world map and minimap.** Find where quest-givers, objectives, creatures, and interactive objects are believed to be.
-- **Quest tracking and progress.** Keep track of active quests and their objectives without constantly reopening the quest log.
-- **Quest guidance and navigation.** Map pins, tooltips, and arrow/navigation features help you reach an objective.
-- **Quest information and search.** Questie-X uses quest, creature, object, and item databases to explain where quests begin and what they require.
-- **Quest history.** The Questie Journey system retains information about your questing progress.
+## Version / repository status
 
-Locations depend on the database and on what players have discovered; custom CoA content may initially be missing or inaccurate.
+- **Repository release manifest:** v1.6.8 (prerelease). This is the source currently configured for automated release packaging; see `.release.json`.
+- **More recent test packages:** v1.6.10 map-canvas compatibility, v1.6.11–v1.6.12 CoADB dependency recovery, and v1.6.13 responsive-startup test have been distributed separately in development. **Do not assume these test ZIPs have been pushed into this repository or published as GitHub Releases.**
+- v1.6.13 aims to spread post-load initialization across frames, avoid duplicate login initialization, and reduce freezes; **actual in-game performance still needs testing.**
+- Existing quest DB content, map behavior, memory caching and BBLC25C sharing should be regression-tested whenever updating.
 
-## Questie Learner: discovering custom content
+## Install
 
-Normal quest addons know about official WoW quests, but Conquest of Azeroth includes custom content. **Questie Learner** is designed to fill those gaps as you play.
+1. Back up relevant `WTF/Account/.../SavedVariables`, especially learner data.
+2. Download a matching package from [GitHub Releases](https://github.com/uncle-bone/Questie-X/releases).
+3. Extract the included addon folders **side by side** into `Interface/AddOns/`: `Questie-X`, `Questie-X-AscensionDB`, `Questie-X-CoADB`, `Questie-X-WotLKDB`, and `Questie-X-WotLK-Locale` where provided.
+4. Restart the client and enable the modules. Avoid installing a second Questie fork simultaneously.
 
-- Observes supported quest, NPC, objective, and related game events to build up a local record.
-- Saves learned information between sessions, so you don't have to rediscover it every login.
-- Can use imported learner information to start with a larger pool of discoveries.
-- Displays learned location information through the quest-helper map interface.
-- Shares compatible discovery data with other players running supported addon builds, helping the community gradually improve coverage.
-- Includes deduplication and throttling work intended to reduce repeated map-pin updates and performance impact.
+If quest pins are missing, verify that all required database plugins are enabled. Never delete SavedVariables to troubleshoot without a backup.
 
-**What learning does not mean:** the addon does not automatically know every custom quest or guarantee a perfect location the first time someone encounters an NPC. Discoveries improve through observation and data sharing.
+## Compatibility and limitations
 
-## How community sharing works
+Designed for Conquest Reborn's older WoW client. The project targets the default Blizzard map as well as Mapster/Magnify, ConquestWorldMapImprovement, DragonUI, ElvUI-CoA and Leatrix map setups; these combinations require direct in-game validation. Large quest databases can cause memory use and startup pauses; do not interpret test-build optimization notes as benchmark results.
 
-Questie-X cooperates with LootCollector and DBM-CoA using LootCollector's existing public sharing channel **`BBLC25C`**. Each addon uses its own message format so their traffic can be distinguished. The current CoA patch delays channel setup during login to reduce channel conflicts. Sharing depends on other compatible players being online and connected; it is not a central always-on database.
+## Maintenance and credits
 
-## Performance and compatibility
+CoA adaptation maintained by **Uncle Bone** ([GitHub](https://github.com/uncle-bone)). Based on the work of [Questie](https://github.com/Questie/Questie), [Questie-X](https://github.com/Xurkon/Questie-X), and their contributors. Preserve upstream licenses and credits. Not an official Ascension project.
 
-The CoA patches include work on older-client API compatibility, map zoom/pin behavior, reducing stutter, and safer chat-channel startup. The underlying Questie-X project includes advanced performance settings and further refactor work; **not every upstream experimental optimization is guaranteed to be in this CoA package**. This is built for the older **Interface 30300** client and should not be assumed compatible with modern retail WoW.
-
-## Important: database plugins are required
-
-**Questie-X is a quest-helper engine, not a complete bundled quest database.** Its upstream installation documentation says it requires **Questie-X-WotLKDB** plus **Questie-X-AscensionDB** for Ascension. The maintainer's GitHub upload now includes additional Questie-X database folders alongside the main addon. Install the database addon folders included with the GitHub source or release alongside the `Questie-X` folder. Without a loaded database, quest pins and quest information will be incomplete or unavailable.
-
-See the upstream [Questie-X project](https://github.com/Xurkon/Questie-X) and its database-plugin documentation for those components. Do not install an old Questie variant simultaneously.
-
-## Install / update
-
-1. Back up your `WTF/Account/.../SavedVariables` files before replacing a test build. These include your learned quest data.
-2. Install the Questie-X addon folder in `World of Warcraft/Interface/AddOns/Questie-X`.
-3. Install the matching WotLK and Ascension database plugin folders **beside** Questie-X, not inside it.
-4. Restart WoW and enable the addon in the character-selection AddOns menu.
-
-If you are updating from an older incompatible Questie fork, remove the old addon folder first. **Do not delete SavedVariables casually**: that can erase locally learned data.
-
-## Current build and downloads
-
-**Current CoA release: v1.6.10.** The package includes the map-canvas compatibility update; runtime compatibility still needs in-game validation. Installable ZIPs and version history are published through [GitHub Releases](https://github.com/uncle-bone/Questie-X/releases).
-
-## Known limits / status
-
-- Custom quest coverage depends on plugin data, learning, and community reports.
-- Performance changes still require real in-game testing, especially in busy areas.
-- Channel and addon compatibility may differ across older builds.
-- The latest ZIP contains an upstream Questie-X version string as well as CoA-specific patch numbering; these identify different layers of the project.
-
-## Credits and feedback
-
-Based on [Questie](https://github.com/Questie/Questie) and [Questie-X](https://github.com/Xurkon/Questie-X), with their original authors and contributors retaining credit. CoA adaptation and distribution by **Uncle Bone**. Community project; not an official Ascension addon.
-
-[Report a bug / suggest a feature](https://github.com/uncle-bone/Questie-X/issues) · [Changelog](CHANGELOG.md)
-
-
-## CoA v1.0.0
-
-CoA release numbering is separate from the upstream Questie-X version. Includes the Patch 12 HBD map-data compatibility fix and existing learner/sharing work. The release includes database plugin folders already maintained in this repository.
+**Report issues:** [Questie-X issues](https://github.com/uncle-bone/Questie-X/issues). Include build, enabled map/UI addons, error text and reproduction steps.
