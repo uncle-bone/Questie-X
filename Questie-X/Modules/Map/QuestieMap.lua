@@ -463,8 +463,8 @@ function QuestieMap.ProcessQueue()
 
     local scaleValue = QuestieMap.GetScaleValue()
     local started = type(debugprofilestop) == "function" and debugprofilestop() or nil
-    for _ = 1, math.min(16, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
-        if started and debugprofilestop() - started >= 4 then break end
+    for _ = 1, math.min(6, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
+        if started and debugprofilestop() - started >= 2 then break end
         local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
             local frame = mapDrawCall[2];
