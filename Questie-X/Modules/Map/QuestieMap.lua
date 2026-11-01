@@ -277,6 +277,24 @@ local function PopDraw(queue, minimap)
     return nil
 end
 
+-- Diagnostic command for the stable branch; module is not a global.
+local function PrintMapQueueStatus()
+    local world = 0
+    local mini = 0
+    for i = mapDrawHead, #mapDrawQueue do
+        if type(mapDrawQueue[i]) == "table" then world = world + 1 end
+    end
+    for i = minimapDrawHead, #minimapDrawQueue do
+        if type(minimapDrawQueue[i]) == "table" then mini = mini + 1 end
+    end
+    local status = (world + mini == 0) and "READY" or "PROCESSING"
+    local msg = string.format("Questie-X map: %s | world pending=%d | minimap pending=%d", status, world, mini)
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(msg) else print(msg) end
+end
+SLASH_QUESTIEXMAPSTATUS1 = "/qxstatus"
+SLASH_QUESTIEXMAPSTATUS2 = "/qxmapstatus"
+SlashCmdList["QUESTIEXMAPSTATUS"] = PrintMapQueueStatus
+
 QuestieMap._mapDrawQueue = mapDrawQueue
 QuestieMap._minimapDrawQueue = minimapDrawQueue
 
