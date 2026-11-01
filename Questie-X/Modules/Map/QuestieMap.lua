@@ -251,21 +251,29 @@ end
 
 local function PopDraw(queue, minimap)
     local head = minimap and minimapDrawHead or mapDrawHead
-    local entry = queue[head]
-    if entry == nil then return nil end
-    queue[head] = false
-    head = head + 1
-    if entry[2] then
-        if minimap then pendingMini[entry[2]] = nil else pendingWorld[entry[2]] = nil end
+    local pending = minimap and pendingMini or pendingWorld
+    -- Cancelled entries are false tombstones; skip them without indexing.
+    while head <= #queue do
+        local entry = queue[head]
+        queue[head] = false
+        head = head + 1
+        if type(entry) == "table" then
+            local frame = entry[2]
+            if frame and pending[frame] == head - 1 then
+                pending[frame] = nil
+            end
+            if minimap then minimapDrawHead = head else mapDrawHead = head end
+            if head > #queue then
+                for i = 1, #queue do queue[i] = nil end
+                if minimap then minimapDrawHead = 1 else mapDrawHead = 1 end
+            end
+            return entry
+        end
     end
-    if minimap then minimapDrawHead = head else mapDrawHead = head end
-    if head > #queue then
-        for i = 1, #queue do queue[i] = nil end
-        if minimap then minimapDrawHead = 1 else mapDrawHead = 1 end
-    end
-    return entry
+    for i = 1, #queue do queue[i] = nil end
+    if minimap then minimapDrawHead = 1 else mapDrawHead = 1 end
+    return nil
 end
-
 
 QuestieMap._mapDrawQueue = mapDrawQueue
 QuestieMap._minimapDrawQueue = minimapDrawQueue
