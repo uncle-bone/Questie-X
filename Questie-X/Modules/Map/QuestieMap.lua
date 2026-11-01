@@ -255,11 +255,11 @@ local function EnqueueUnique(queue, pending, ...)
 end
 
 -- Prioritize current-zone pins without reordering the complete global queue.
--- A bounded lookahead avoids scanning thousands of entries on every frame.
+-- A short bounded lookahead limits scanning work while keeping nearby pins responsive.
 local function PromoteCurrentZone(queue, head)
     local zone = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
     if not zone then return end
-    local last = math.min(#queue, head + 96)
+    local last = math.min(#queue, head + 32)
     for i = head, last do
         local entry = queue[i]
         if type(entry) == "table" and entry[3] == zone then
@@ -531,8 +531,8 @@ function QuestieMap.ProcessQueue()
     -- Always make forward progress, even when the prior icon took longer
     -- than the normal frame budget. Otherwise a busy client can starve pins.
     local processed = 0
-    for _ = 1, math.min(12, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
-        if processed > 0 and started and debugprofilestop() - started >= 2 then break end
+    for _ = 1, math.min(6, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
+        if processed > 0 and started and debugprofilestop() - started >= 1 then break end
         processed = processed + 1
         PromoteCurrentZone(mapDrawQueue, mapDrawHead)
         local mapDrawCall = PopDraw(mapDrawQueue, false);
@@ -545,7 +545,7 @@ function QuestieMap.ProcessQueue()
             end
             worldProcessed = worldProcessed + 1
             if worldProcessed == 1 then MapNotice("Map icon loading started; custom zone diagnostics active.") end
-            if worldProcessed % 500 == 0 then MapNotice(string.format("Map icons: %d processed, %d pending; Pale Reach %d.", worldProcessed, math.max(0, #mapDrawQueue - mapDrawHead + 1), paleProcessed)) end
+            -- Avoid chat updates during loading; the final completion notice remains.
 
             local size = (16 * (frame.data.IconScale or 1) * (Questie.db.profile.globalScale or 0.7)) * scaleValue;
             frame:SetSize(size, size)
