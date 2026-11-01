@@ -302,7 +302,7 @@ function QuestieMap:InitializeQueue()
     if (not isInInstance) or instanceType ~= "raid" then
         isDrawQueueDisabled = false
         if not drawTimer then
-            drawTimer = C_Timer.NewTicker(0.2, QuestieMap.ProcessQueue)
+            drawTimer = C_Timer.NewTicker(0.05, QuestieMap.ProcessQueue)
             fadeLogicTimerShown = C_Timer.NewTicker(0.1, function()
                 if fadeLogicCoroutine and coroutine.status(fadeLogicCoroutine) == "suspended" then
                     local success, errorMsg = coroutine.resume(fadeLogicCoroutine)
@@ -463,8 +463,8 @@ function QuestieMap.ProcessQueue()
 
     local scaleValue = QuestieMap.GetScaleValue()
     local started = type(debugprofilestop) == "function" and debugprofilestop() or nil
-    for _ = 1, math.min(12, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
-        if started and debugprofilestop() - started >= 3 then break end
+    for _ = 1, math.min(16, math.max(#mapDrawQueue - mapDrawHead + 1, #minimapDrawQueue - minimapDrawHead + 1)) do
+        if started and debugprofilestop() - started >= 4 then break end
         local mapDrawCall = PopDraw(mapDrawQueue, false);
         if mapDrawCall then
             local frame = mapDrawCall[2];
