@@ -233,12 +233,31 @@ local mapDrawQueue = {};
 local minimapDrawQueue = {};
 -- Use queue heads instead of O(n) table.remove(queue, 1) per icon.
 local mapDrawHead, minimapDrawHead = 1, 1
+-- One pending draw per icon frame per map; repeat refreshes replace their args.
+local pendingWorld = setmetatable({}, { __mode = "k" })
+local pendingMini = setmetatable({}, { __mode = "k" })
+local function EnqueueUnique(queue, pending, ...)
+    local args = { ... }
+    local frame = args[2]
+    if not frame then return end
+    local index = pending[frame]
+    if index and queue[index] then
+        queue[index] = args
+    else
+        queue[#queue + 1] = args
+        pending[frame] = #queue
+    end
+end
+
 local function PopDraw(queue, minimap)
     local head = minimap and minimapDrawHead or mapDrawHead
     local entry = queue[head]
-    if not entry then return nil end
+    if entry == nil then return nil end
     queue[head] = false
     head = head + 1
+    if entry[2] then
+        if minimap then pendingMini[entry[2]] = nil else pendingWorld[entry[2]] = nil end
+    end
     if minimap then minimapDrawHead = head else mapDrawHead = head end
     if head > #queue then
         for i = 1, #queue do queue[i] = nil end
@@ -261,16 +280,10 @@ QuestieMap._minimapDrawQueue = minimapDrawQueue
 --- calls on Unload keeps both maps in sync. (#9)
 function QuestieMap:DequeueFrameDrawCalls(frame)
     if not frame then return end
-    for i = #mapDrawQueue, 1, -1 do
-        if mapDrawQueue[i] and mapDrawQueue[i][2] == frame then
-            tremove(mapDrawQueue, i)
-        end
-    end
-    for i = #minimapDrawQueue, 1, -1 do
-        if minimapDrawQueue[i] and minimapDrawQueue[i][2] == frame then
-            tremove(minimapDrawQueue, i)
-        end
-    end
+    local worldIndex = pendingWorld[frame]
+    if worldIndex then mapDrawQueue[worldIndex] = false; pendingWorld[frame] = nil end
+    local miniIndex = pendingMini[frame]
+    if miniIndex then minimapDrawQueue[miniIndex] = false; pendingMini[frame] = nil end
 end
 
 --- Called at startup (Stage 3) and on PLAYER_ENTERING_WORLD to reset the draw queue.
@@ -428,9 +441,9 @@ function QuestieMap:QueueDraw(drawType, ...)
             end
         end
         if (drawType == QuestieMap.ICON_MAP_TYPE) then
-            tinsert(mapDrawQueue, { ... });
+            EnqueueUnique(mapDrawQueue, pendingWorld, ...);
         elseif (drawType == QuestieMap.ICON_MINIMAP_TYPE) then
-            tinsert(minimapDrawQueue, { ... });
+            EnqueueUnique(minimapDrawQueue, pendingMini, ...);
         end
     end
 end
