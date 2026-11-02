@@ -21,7 +21,7 @@
 
 ## Version / repository status
 
-- **Latest available build:** v1.6.32 — [Download](https://github.com/uncle-bone/Questie-X/releases/download/v1.6.32/Questie-X-v1.6.32.zip).
+- **Latest available build:** v1.6.32 — [Download](https://github.com/uncle-bone/Questie-X/releases/latest).
 - Packages the five addon folders from the repository main branch.
 - This package does not include the separately generated v1.6.25 map-syntax fix. Confirm Pale Reach map behavior in game.
 - Earlier startup FPS degradation has not been confirmed resolved. Existing SavedVariables are preserved.
