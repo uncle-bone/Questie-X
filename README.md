@@ -1,6 +1,7 @@
 # Questie-X CoA
 
-> **[Download](https://github.com/uncle-bone/Questie-X/releases/latest)**
+> **[Download Here!](https://coa-research.unclebone.workers.dev/download/Questie-X)**
+**Current stable release: v1.6.32.**
 
 **Quest tracking, map guidance, and community quest learning for Ascension: Conquest of Azeroth / Conquest Reborn (WoW 3.3.5a, Interface 30300).**
 
